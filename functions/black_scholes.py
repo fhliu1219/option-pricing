@@ -46,4 +46,4 @@ def implied_volatility(market_price, S, K, T, r, call = True, tol =1e-6, max_ite
         if abs(sigma_new - sigma) < tol:
             return sigma_new
         sigma = sigma_new
-    raise ValueError("Implied volatility did not converge")
+    raise ValueError(f"Implied volatility did not converge, sigma at {sigma}")
