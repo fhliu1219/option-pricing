@@ -1,7 +1,7 @@
 import yfinance as yf
 from functions.black_scholes import black_scholes_price, implied_volatility
 import matplotlib.pyplot as plt
-from datetime import datetime
+from datetime import datetime, timezone
 import numpy as np
 
 # Global Parameters:
@@ -20,7 +20,7 @@ def fetch_market_data(ticker):
 
     # Fetch option chain for multiple expiration
     data = {}
-    for expiry in expirations[:3]: # Limit to 3 expirations for simplicity.
+    for expiry in expirations: # Could limit to 3 expirations for simplicity, but let's expand!
         chain = stock.option_chain(expiry)
         calls = chain.calls.dropna(subset = ["lastPrice"]) # Filter out NaN prices
         data[expiry] = {
@@ -32,8 +32,8 @@ def fetch_market_data(ticker):
     return S, data
 
 def calculate_time_to_maturity(expiry):
-    expiry_date = datetime.strptime(expiry, "%Y-%m-%d")
-    today = datetime.utcnow() # Use UTC for consistency
+    expiry_date = datetime.strptime(expiry, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    today = datetime.now(timezone.utc) # Use UTC for consistency
     return (expiry_date - today).days / 365.0
 
 def calculate_vol_surface(market_data, S, r):
