@@ -1,6 +1,8 @@
 import yfinance as yf
 from functions.black_scholes import black_scholes_price, implied_volatility
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from scipy.interpolate import griddata
 from datetime import datetime, timezone
 import numpy as np
 
@@ -83,15 +85,55 @@ def plot_vol_surface(vol_surface):
         print("No valid data available for plotting")
     X,Y,Z = np.array(valid_data).T
 
-    # 3D plot Generation
-    fig = plt.figure(figsize = (10, 7))
+    # 2) Create a regular 2D grid for strike (K) and time (T)
+    K_lin = np.linspace(X.min(), X.max(), 50)  # 50 points in strike dimension
+    T_lin = np.linspace(Y.min(), Y.max(), 50)  # 50 points in time dimension
+    K_grid, T_grid = np.meshgrid(K_lin, T_lin)
+
+    # 3) Interpolate implied volatilities onto the grid
+    Z_grid = griddata(
+        (X, Y),   # Known (strike, time) points
+        Z,        # Known implied volatilities
+        (K_grid, T_grid),
+        method='cubic'  # 'cubic', 'linear', or 'nearest'
+        
+    )
+
+    # 4) Plot the surface
+    fig = plt.figure(figsize=(10, 7))
     ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(X,Y,Z, c=Z, cmap='viridis', marker='o')
+    
+    # Optionally mask invalid values (NaNs) if interpolation fails outside data range
+    # Z_grid = np.ma.masked_invalid(Z_grid)
+
+    # plot_surface for a continuous 3D representation
+    surf = ax.plot_surface(
+        K_grid, T_grid, Z_grid,
+        cmap='viridis',
+        edgecolor='none',
+        alpha=0.8
+    )
+
     ax.set_title("Implied Volatility Surface")
-    ax.set_xlabel("Strike prices")
+    ax.set_xlabel("Strike Price")
     ax.set_ylabel("Time to Maturity (Years)")
     ax.set_zlabel("Implied Volatility")
+
+    # Add a color bar (optional)
+    fig.colorbar(surf, shrink=0.5, aspect=10, label='Vol')
+
     plt.show()
+
+    ## 3D plot Generation for non-smooth function
+
+    # fig = plt.figure(figsize = (10, 7))
+    # ax = fig.add_subplot(111, projection='3d')
+    # ax.scatter(X,Y,Z, c=Z, cmap='viridis', marker='o')
+    # ax.set_title("Implied Volatility Surface")
+    # ax.set_xlabel("Strike prices")
+    # ax.set_ylabel("Time to Maturity (Years)")
+    # ax.set_zlabel("Implied Volatility")
+    # plt.show()
 
 def main(ticker):
     S, market_data = fetch_market_data(ticker)
