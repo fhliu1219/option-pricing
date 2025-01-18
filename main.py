@@ -1,5 +1,5 @@
 import yfinance as yf
-from functions.black_scholes import black_scholes_price, implied_volatility
+from functions.calculation_func import *
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.interpolate import griddata
@@ -11,7 +11,7 @@ r = 0.05 # General assumption for Risk-free rate
 
 def fetch_market_data(ticker):
     try:
-        # Fetch option data for a stock (e.g., AAPL)   
+        # Fetch option data from stock symbol 
         stock = yf.Ticker(ticker)
         # Getting expiration dates
         expirations = stock.options
@@ -85,12 +85,12 @@ def plot_vol_surface(vol_surface):
         print("No valid data available for plotting")
     X,Y,Z = np.array(valid_data).T
 
-    # 2) Create a regular 2D grid for strike (K) and time (T)
+    # Create a regular 2D grid for strike (K) and time (T)
     K_lin = np.linspace(X.min(), X.max(), 50)  # 50 points in strike dimension
     T_lin = np.linspace(Y.min(), Y.max(), 50)  # 50 points in time dimension
     K_grid, T_grid = np.meshgrid(K_lin, T_lin)
 
-    # 3) Interpolate implied volatilities onto the grid
+    # Interpolate implied volatilities onto the grid
     Z_grid = griddata(
         (X, Y),   # Known (strike, time) points
         Z,        # Known implied volatilities
@@ -99,7 +99,7 @@ def plot_vol_surface(vol_surface):
         
     )
 
-    # 4) Plot the surface
+    # Plot the surface
     fig = plt.figure(figsize=(10, 7))
     ax = fig.add_subplot(111, projection='3d')
     
